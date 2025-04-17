@@ -91,7 +91,7 @@ def download_tar_files(file_link: str):
     res = requests.get(file_link)
     filename = get_tar_filename(file_link)
 
-    with open('tar_files/' + filename, 'wb') as fobj:
+    with open('tar_files_from_pmc/' + filename, 'wb') as fobj:
         fobj.write(res.content)
         fobj.close()
 

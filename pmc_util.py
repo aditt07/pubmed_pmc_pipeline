@@ -67,7 +67,7 @@ def pmc_pdf_link(pmc_ids: List[str]) -> List[str]:
         data = convert_xml_to_json(res.text)
 
         try:
-            tar_link = data['OA']['records']['record']['link'][1]['@href']
+            tar_link = data['OA']['records']['record']['link'][1]['@href']  # Index 0 -> tarfile, 1 -> PDF
             tar_link = tar_link.replace('ftp://', 'https://')
             tar_links.append(tar_link)
         except KeyError as e:
@@ -79,12 +79,12 @@ def pmc_pdf_link(pmc_ids: List[str]) -> List[str]:
     return tar_links
 
 
-def download_pmc_tar_files(file_link: str):
+def download_pmc_pdf_files(file_link: str):
     file_link = file_link.replace('ftp:', 'https:')
     res = requests.get(file_link)
     filename = get_pmc_tar_filename(file_link)
 
-    with open('tar_files_from_pmc/' + filename, 'wb') as fobj:
+    with open('pdf_files_from_pmc/' + filename, 'wb') as fobj:
         fobj.write(res.content)
         fobj.close()
 
