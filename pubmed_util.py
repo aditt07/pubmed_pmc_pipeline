@@ -8,15 +8,6 @@ import xmltodict
 from typing import List, Dict
 from dotenv import load_dotenv
 
-import pprint
-
-"""
-todos:
-1. Get the query from the user with API and utilise e_query_url and get the pubmed ids  - DONE
-2. Get the webEnv key for the pubmed ID and use e_post_url - DONE
-3. Check if PMCID is present in the response once you use e_fetch_url. if not ignore that pubmed ID - DONE
-4. Get the tar.gz link from the response of pmc_url by passing the pmcid as query parameter - TODO
-"""
 
 load_dotenv()
 
@@ -77,7 +68,7 @@ def is_licensed(lcs: str) -> bool:
 
 def get_pmc_tar_link(pmc_ids: List[str]) -> List[str]:
     tar_links = []
-    # TODO: Need to fetch the tar link if the license is allowed.   verify that in the existing codebase
+
     for pmc in pmc_ids:
         pmc_url = os.getenv('PMC_URL')
         endpoint = f'{pmc_url}{pmc}'
@@ -85,9 +76,12 @@ def get_pmc_tar_link(pmc_ids: List[str]) -> List[str]:
         res = requests.get(endpoint)
         data = convert_xml_to_json(res.text)
         #pprint.pprint(data)
-        if not is_licensed(data['OA']['records']['record']['@license']):
-            tar_link = data['OA']['records']['record']['link'][0]['@href']
-            tar_links.append(tar_link)
+        try:
+            if not is_licensed(data['OA']['records']['record']['@license']):
+                tar_link = data['OA']['records']['record']['link'][0]['@href']
+                tar_links.append(tar_link)
+        except KeyError as e:
+            a = 0
 
     return tar_links
 

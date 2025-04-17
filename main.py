@@ -1,7 +1,6 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+"""
+Pipeline for fetching open access data from pubmed  and PMC
+"""
 
 import os
 from dotenv import load_dotenv
@@ -14,11 +13,13 @@ from pmc_util import pmc_query_result, get_pmc_ids, pmc_tar_link, get_pmc_tar_fi
 #  load the env data
 load_dotenv()
 
+QUERY = 'multiple myeloma'
 
-def test_func():
-    result_count = os.getenv('RESULT_COUNT')
-    query = 'multiple myeloma'  # query from the user
-    data = get_pubmed_query(query)  # xml is converted to Dict    API-1
+# This test function will fetch records from pubmed
+def fetch_pubmed_data():
+    print('data fetching from pubmed started.....')
+
+    data = get_pubmed_query(QUERY)  # xml is converted to Dict    API-1
     pubmed_ids = get_pubmed_ids(data)  # This will return pubmed Ids from Dict   API-2
 
     print(f'DEBUG: printing pubmed IDS for {len(pubmed_ids)}')
@@ -41,18 +42,19 @@ def test_func():
     print(pmc_ids)
 
     tar_files = get_pmc_tar_link(pmc_ids)
-    print('DEBUG: Tar files link.....')
+    print('DEBUG: Tar files link which is non-commercial.....')
     print(tar_files)
 
     for file in tar_files:
-        download_pmc_tar_files(file)
+        if file != 'None':
+            download_pmc_tar_files(file)
 
-    print('How cool is it ! ??.....')
 
+# This function will fetch data from PMC
+def fetch_pmc_data():
+    print('data fetching from pmc started......')
 
-def test_func_2():
-    query = 'multiple myeloma'
-    result = pmc_query_result(query)
+    result = pmc_query_result(QUERY)
     ids = get_pmc_ids(result)
 
     tar_links = pmc_pdf_link(ids)
@@ -62,7 +64,7 @@ def test_func_2():
             download_pmc_tar_files(link)
 
 
-# Press the green button in the gutter to run the script.
+# Main function
 if __name__ == '__main__':
-    # test_func()      this is for pubmed
-    test_func_2()  # this is for PMC
+    fetch_pubmed_data()
+    fetch_pmc_data()
