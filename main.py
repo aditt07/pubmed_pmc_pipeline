@@ -3,17 +3,21 @@ Pipeline for fetching open access data from pubmed  and PMC
 """
 
 import os
+import pprint
+
 from dotenv import load_dotenv
 from pubmed_util import get_pubmed_query, get_pubmed_ids, get_web_env_for_pubmed_ids, get_pmc_response, get_pmc_id, \
-    get_pmc_tar_link, download_tar_files, get_tar_filename
+    get_pmc_tar_link, download_tar_files
 
-from pmc_util import pmc_query_result, get_pmc_ids, download_pmc_pdf_files, \
-    pmc_pdf_link
+from pmc_util import pmc_query_result, get_pmc_ids, write_metadata_to_excel, \
+    pmc_pdf_link, get_pmc_webenv, pmc_efetch_response, fetch_meta_data_from_pmc_response, download_pmc_pdf_files, \
+    create_query_dir
 
 #  load the env data
 load_dotenv()
 
-QUERY = 'multiple myeloma'
+QUERY = 'breast cancer'
+
 
 # This test function will fetch records from pubmed
 def fetch_pubmed_data():
@@ -51,20 +55,41 @@ def fetch_pubmed_data():
 
 
 # This function will fetch data from PMC
-def fetch_pmc_data():
+def fetch_pmc_data(query: str):
     print('data fetching from pmc started......')
 
-    result = pmc_query_result(QUERY)
+    create_query_dir(query)
+
+    result = pmc_query_result(query)
     ids = get_pmc_ids(result)
+    print("ids:", ids)
+    pdf_links, oa_pmc = pmc_pdf_link(ids)
+    pdf_links = [l for l in pdf_links if l != 'None']
 
-    tar_links = pmc_pdf_link(ids)
+    print('pdf_links:', pdf_links)
+    print('oa pmc ids:', oa_pmc)
 
-    for link in tar_links:
-        if link != 'None':
-            download_pmc_pdf_files(link)
+    print('length of open access pdf links: ',len(pdf_links))
+    print('length of open access pmc IDS: ', len(oa_pmc))
+
+    print('Downloading PDF files.....')
+    for link, pmc in zip(pdf_links, oa_pmc):
+        download_pmc_pdf_files(link, pmc, query)
+
+    print('Metadata extraction started.........')
+    for pmc in oa_pmc:
+        print('fetching PMC metadata response for: ', pmc)
+        envkey = get_pmc_webenv(pmc)
+        res = pmc_efetch_response(envkey)
+        data = fetch_meta_data_from_pmc_response(res)
+        write_metadata_to_excel(data, query)
 
 
 # Main function
 if __name__ == '__main__':
-    fetch_pubmed_data()
-    fetch_pmc_data()
+    #fetch_pubmed_data()
+    '''
+        TODO:  query is hardcoded. Query has to come from the DB. and this 
+        function has to be iterated
+    '''
+    fetch_pmc_data(QUERY)
